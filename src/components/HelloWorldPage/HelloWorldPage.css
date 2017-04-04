@@ -1,0 +1,15 @@
+.HelloWorldPage {
+    padding: 20px;
+}
+
+.HelloWorldPage h1 {
+    font-size: 26px;
+}
+
+.HelloWorldPage input {
+    padding: 10px;
+}
+
+.HelloWorldPage hr {
+    margin-top: 20px;
+}
