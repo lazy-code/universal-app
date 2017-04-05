@@ -2,17 +2,32 @@ import express from 'express';
 import React from 'react';
 import ReactDom from 'react-dom/server';
 import { match, RouterContext } from 'react-router';
-import routes from './routes';
 import { Provider } from 'react-redux';
+import cookieParser from 'cookie-parser';
+import { getHeaders, initialize } from 'redux-oauth';
+import routes from './routes';
 import configureStore from './redux/configureStore.prod';
 
 const app = express();
+
+app.use(cookieParser());
 
 app.use((req, res) => {
 
   const store = configureStore();
 
-  match({ routes, location: req.url }, (error, redirectLocation, renderProps) => {
+  store.dispatch(initialize({
+    backend: {
+      apiUrl: 'https://redux-oauth-backend.herokuapp.com',
+      authProviderPaths: {
+        github: '/auth/github'
+      },
+      signOutPath: null
+    },
+    currentLocation: req.url,
+    cookies: req.cookies
+  })).then(() => match({ routes, location: req.url }, (error, redirectLocation, renderProps) => {
+
     if (redirectLocation) {
       return res.redirect(301, redirectLocation.pathname + redirectLocation.search);
     }
@@ -33,8 +48,9 @@ app.use((req, res) => {
 
     const state = store.getState();
 
+    res.cookie('authHeaders', JSON.stringify(getHeaders(state)), { maxAge: Date.now() + 14 * 24 * 3600 * 1000 });
     return res.end(renderHTML(componentHTML, state));
-  });
+  }));
 });
 
 const assetUrl = process.env.NODE_ENV !== 'production' ? 'http://localhost:8050' : '/';
