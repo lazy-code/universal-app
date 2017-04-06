@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import { getHeaders, initialize } from 'redux-oauth';
 import routes from './routes';
 import configureStore from './redux/configureStore.prod';
+import { timeRequest } from './redux/actions/timeActions';
 
 const app = express();
 
@@ -26,7 +27,9 @@ app.use((req, res) => {
     },
     currentLocation: req.url,
     cookies: req.cookies
-  })).then(() => match({ routes, location: req.url }, (error, redirectLocation, renderProps) => {
+  }))
+    .then(() => store.dispatch(timeRequest()))
+    .then(() => match({ routes: routes(store), location: req.url }, (error, redirectLocation, renderProps) => {
 
     if (redirectLocation) {
       return res.redirect(301, redirectLocation.pathname + redirectLocation.search);
